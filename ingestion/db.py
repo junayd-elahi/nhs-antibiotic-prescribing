@@ -1,5 +1,6 @@
 from pathlib import Path
 import duckdb
+import pandas as pd
 
 DB_PATH = Path(__file__).resolve().parents[1] / "data" / "nhs.duckdb"
 
