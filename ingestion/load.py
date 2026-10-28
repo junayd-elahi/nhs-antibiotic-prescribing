@@ -1,6 +1,6 @@
 import sys
 from ingestion.nhsbsa import run_query
-from ingestion.db import connect
+from ingestion.db import replace_month
 
 def bnf_column(resource: str) -> str:
     columns = run_query(resource, f"SELECT * FROM `{resource}` LIMIT 1").columns
@@ -26,11 +26,7 @@ def fetch_month(month: str):
 
 def load_month(month: str) -> int:
     df = fetch_month(month)
-    with connect() as con:
-        con.execute("CREATE SCHEMA IF NOT EXISTS raw")
-        con.execute("CREATE TABLE IF NOT EXISTS raw.epd_antibiotics AS SELECT * FROM df LIMIT 0")
-        con.execute("DELETE FROM raw.epd_antibiotics WHERE month = ?", [month])
-        con.execute("INSERT INTO raw.epd_antibiotics SELECT * FROM df")
+    replace_month("raw.epd_antibiotics", month, df)
     return len(df)
 
 if __name__ == "__main__":
