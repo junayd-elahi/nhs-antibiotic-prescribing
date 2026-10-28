@@ -7,7 +7,7 @@ import requests
 from ingestion.db import replace_month
 
 PAGE = "https://digital.nhs.uk/data-and-information/publications/statistical/patients-registered-at-a-gp-practice/{slug}"
-ZIP_LINK = re.compile(r'https://files\.digital\.nhs\.uk/[^"\']+/gp-reg-pat-prac-all\.zip')
+ZIP_LINK = re.compile(r'https://files\.digital\.nhs\.uk/[^"\']+/gp-reg-pat-prac-all\.(?:zip|csv)')
 
 def download(url: str) -> requests.Response:
     response = requests.get(url)
@@ -26,7 +26,9 @@ def zip_url(month: str) -> str:
     return links.pop()
 
 def fetch_month(month: str) -> pd.DataFrame:
-    raw = pd.read_csv(io.BytesIO(download(zip_url(month)).content), compression="zip")
+    url = zip_url(month)
+    compression = "zip" if url.endswith(".zip") else None
+    raw = pd.read_csv(io.BytesIO(download(url).content), compression=compression)
     if raw.empty:
         raise RuntimeError(f"No rows for {month}")
     return pd.DataFrame({
